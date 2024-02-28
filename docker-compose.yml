@@ -1,0 +1,22 @@
+version: '3.4'
+
+services:
+  account.api:
+    image: ${DOCKER_REGISTRY-}accountapi
+    build:
+      context: .
+      dockerfile: src/Account.Api/Dockerfile
+    depends_on:
+      - db
+    environment:
+      - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: AccountApiContext
+    ports:
+      - "5432:5432"
+

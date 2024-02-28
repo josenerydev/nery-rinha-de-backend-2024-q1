@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Account.Api.Models;
+
 using Microsoft.EntityFrameworkCore;
-using Account.Api;
 
 namespace Account.Api.Data
 {
     public class AccountApiContext : DbContext
     {
-        public AccountApiContext (DbContextOptions<AccountApiContext> options)
+        public AccountApiContext(DbContextOptions<AccountApiContext> options)
             : base(options)
         {
         }
 
-        public DbSet<Account.Api.Cliente> Cliente { get; set; } = default!;
+        public DbSet<Cliente> Clientes { get; set; } = default!;
     }
 }

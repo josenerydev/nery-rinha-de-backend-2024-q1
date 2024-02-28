@@ -1,4 +1,6 @@
-﻿namespace Account.Api
+﻿using System.Text.Json.Serialization;
+
+namespace Account.Api.Models
 {
     public class Cliente
     {
@@ -47,13 +49,22 @@
     public class TransacaoRequisicaoDTO
     {
         public int Valor { get; set; }
-        public TipoTransacao Tipo { get; set; }
+        public char Tipo { get; set; }
         public string Descricao { get; set; }
+    }
+
+    public class TransacaoRespostaDTO
+    {
+        public int Limite { get; set; }
+        public int Saldo { get; set; }
     }
 
     public class ExtratoRespostaDTO
     {
+        [JsonPropertyName("saldo")]
         public SaldoDTO Saldo { get; set; }
+
+        [JsonPropertyName("ultimas_transacoes")]
         public List<TransacaoDTO> UltimasTransacoes { get; set; }
 
         public ExtratoRespostaDTO()
@@ -64,16 +75,28 @@
 
     public class SaldoDTO
     {
+        [JsonPropertyName("total")]
         public int Total { get; set; }
+
+        [JsonPropertyName("data_extrato")]
         public DateTime DataExtrato { get; set; }
+
+        [JsonPropertyName("limite")]
         public int Limite { get; set; }
     }
 
     public class TransacaoDTO
     {
+        [JsonPropertyName("valor")]
         public int Valor { get; set; }
-        public TipoTransacao Tipo { get; set; }
+
+        [JsonPropertyName("tipo")]
+        public char Tipo { get; set; } // 'c' para crédito, 'd' para débito
+
+        [JsonPropertyName("descricao")]
         public string Descricao { get; set; }
+
+        [JsonPropertyName("realizada_em")]
         public DateTime RealizadaEm { get; set; }
     }
 }

@@ -1,108 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Account.Api.Models;
+using Account.Api.Services;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Account.Api;
-using Account.Api.Data;
 
 namespace Account.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class ClientesController : ControllerBase
     {
-        private readonly AccountApiContext _context;
+        private readonly TransacaoService _transacaoService;
 
-        public ClientesController(AccountApiContext context)
+        public ClientesController(TransacaoService transacaoService)
         {
-            _context = context;
+            _transacaoService = transacaoService;
         }
 
-        // GET: api/Clientes
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Cliente>>> GetCliente()
+        [HttpPost("{id}/transacoes")]
+        public async Task<IActionResult> PostTransacao(int id, TransacaoRequisicaoDTO transacaoRequisicaoDTO)
         {
-            return await _context.Cliente.ToListAsync();
-        }
+            (bool sucesso, var cliente) = transacaoRequisicaoDTO.Tipo == 'c' ?
+                await _transacaoService.RealizarDeposito(id, transacaoRequisicaoDTO.Valor, transacaoRequisicaoDTO.Descricao) :
+                await _transacaoService.RealizarSaque(id, transacaoRequisicaoDTO.Valor, transacaoRequisicaoDTO.Descricao);
 
-        // GET: api/Clientes/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Cliente>> GetCliente(int id)
-        {
-            var cliente = await _context.Cliente.FindAsync(id);
-
-            if (cliente == null)
+            if (!sucesso)
             {
-                return NotFound();
+                if (cliente == null) return NotFound("Cliente não encontrado.");
+                return UnprocessableEntity("Não foi possível realizar a transação.");
             }
 
-            return cliente;
+            return Ok(new TransacaoRespostaDTO { Limite = cliente.Limite, Saldo = cliente.Saldo });
         }
 
-        // PUT: api/Clientes/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCliente(int id, Cliente cliente)
+        [HttpGet("{id}/extrato")]
+        public async Task<IActionResult> GetExtrato(int id)
         {
-            if (id != cliente.Id)
-            {
-                return BadRequest();
-            }
+            var extrato = await _transacaoService.ObterExtrato(id);
 
-            _context.Entry(cliente).State = EntityState.Modified;
+            if (extrato == null) return NotFound("Cliente não encontrado.");
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ClienteExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Clientes
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Cliente>> PostCliente(Cliente cliente)
-        {
-            _context.Cliente.Add(cliente);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetCliente", new { id = cliente.Id }, cliente);
-        }
-
-        // DELETE: api/Clientes/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCliente(int id)
-        {
-            var cliente = await _context.Cliente.FindAsync(id);
-            if (cliente == null)
-            {
-                return NotFound();
-            }
-
-            _context.Cliente.Remove(cliente);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool ClienteExists(int id)
-        {
-            return _context.Cliente.Any(e => e.Id == id);
+            return Ok(extrato);
         }
     }
 }
