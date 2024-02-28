@@ -1,17 +1,32 @@
 version: '3.4'
 
 services:
-  account.api:
+  account.api1:
+    container_name: account_api_1
     image: ${DOCKER_REGISTRY-}accountapi
     build:
       context: .
       dockerfile: src/Account.Api/Dockerfile
     depends_on:
       - db
+      - yarp.loadbalancer
     environment:
       - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;
 
+  account.api2:
+    container_name: account_api_2
+    image: ${DOCKER_REGISTRY-}accountapi
+    build:
+        context: .
+        dockerfile: src/Account.Api/Dockerfile
+    depends_on:
+        - db
+        - yarp.loadbalancer
+    environment:
+        - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;
+
   db:
+    container_name: postgres_db
     image: postgres
     environment:
       POSTGRES_USER: postgres
@@ -19,4 +34,12 @@ services:
       POSTGRES_DB: AccountApiContext
     ports:
       - "5432:5432"
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
 
+  yarp.loadbalancer:
+    container_name: yarp_loadbalancer
+    image: ${DOCKER_REGISTRY-}yarploadbalancer
+    build:
+      context: .
+      dockerfile: src/Yarp.LoadBalancer/Dockerfile

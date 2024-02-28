@@ -1,4 +1,5 @@
 ﻿using Account.Api.Data;
+using Account.Api.Dtos;
 using Account.Api.Models;
 
 using Microsoft.EntityFrameworkCore;
@@ -17,13 +18,13 @@ namespace Account.Api.Services
         public async Task<(bool, Cliente)> RealizarDeposito(int clienteId, int valor, string descricao)
         {
             var cliente = await _context.Clientes.Include(c => c.Transacoes).FirstOrDefaultAsync(c => c.Id == clienteId);
-            if (cliente == null) return (false, null); // Cliente não encontrado
+            if (cliente == null) return (false, null!);
 
             cliente.Saldo += valor;
             cliente.Transacoes.Add(new Transacao
             {
                 Valor = valor,
-                Tipo = TipoTransacao.Credito,
+                Tipo = 'c',
                 Descricao = descricao,
                 RealizadaEm = DateTime.UtcNow,
                 ClienteId = clienteId
@@ -38,15 +39,15 @@ namespace Account.Api.Services
         public async Task<(bool, Cliente)> RealizarSaque(int clienteId, int valor, string descricao)
         {
             var cliente = await _context.Clientes.Include(c => c.Transacoes).FirstOrDefaultAsync(c => c.Id == clienteId);
-            if (cliente == null) return (false, null); // Cliente não encontrado
+            if (cliente == null) return (false, null!);
 
-            if (cliente.Saldo - valor < -cliente.Limite) return (false, cliente); // Saque deixaria o saldo abaixo do limite
+            if (cliente.Saldo - valor < -cliente.Limite) return (false, cliente);
 
             cliente.Saldo -= valor;
             cliente.Transacoes.Add(new Transacao
             {
                 Valor = -valor,
-                Tipo = TipoTransacao.Debito,
+                Tipo = 'd',
                 Descricao = descricao,
                 RealizadaEm = DateTime.UtcNow,
                 ClienteId = clienteId
@@ -60,28 +61,35 @@ namespace Account.Api.Services
 
         public async Task<ExtratoRespostaDTO> ObterExtrato(int clienteId)
         {
+            // Verifica se o cliente existe
+            var clienteExists = await _context.Clientes.AnyAsync(c => c.Id == clienteId);
+            if (!clienteExists) return null!;
+
+            // Consulta as 10 últimas transações do cliente diretamente do banco de dados
+            var ultimasTransacoes = await _context.Transacoes
+                                                  .AsNoTracking()
+                                                  .Where(t => t.ClienteId == clienteId)
+                                                  .OrderByDescending(t => t.RealizadaEm)
+                                                  .Take(10)
+                                                  .Select(t => new TransacaoDTO
+                                                  {
+                                                      Valor = t.Valor,
+                                                      Tipo = (char)t.Tipo,
+                                                      Descricao = t.Descricao,
+                                                      RealizadaEm = t.RealizadaEm
+                                                  }).ToListAsync();
+
+            // Consulta o saldo e limite do cliente
             var cliente = await _context.Clientes
                                         .AsNoTracking()
-                                        .Include(c => c.Transacoes)
+                                        .Select(c => new { c.Id, c.Saldo, c.Limite })
                                         .FirstOrDefaultAsync(c => c.Id == clienteId);
-
-            if (cliente == null) return null; // Cliente não encontrado
-
-            var ultimasTransacoes = cliente.Transacoes
-                                           .OrderByDescending(t => t.RealizadaEm)
-                                           .Select(t => new TransacaoDTO
-                                           {
-                                               Valor = t.Valor,
-                                               Tipo = (char)t.Tipo,
-                                               Descricao = t.Descricao,
-                                               RealizadaEm = t.RealizadaEm
-                                           }).ToList();
 
             var extratoRespostaDTO = new ExtratoRespostaDTO
             {
                 Saldo = new SaldoDTO
                 {
-                    Total = cliente.Saldo,
+                    Total = cliente!.Saldo,
                     DataExtrato = DateTime.UtcNow,
                     Limite = cliente.Limite
                 },

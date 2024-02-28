@@ -1,4 +1,4 @@
-﻿using Account.Api.Models;
+﻿using Account.Api.Dtos;
 using Account.Api.Services;
 
 using Microsoft.AspNetCore.Mvc;

@@ -8,17 +8,17 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["src/Account.Api/Account.Api.csproj", "src/Account.Api/"]
-RUN dotnet restore "./src/Account.Api/Account.Api.csproj"
+COPY ["src/Yarp.LoadBalancer/Yarp.LoadBalancer.csproj", "src/Yarp.LoadBalancer/"]
+RUN dotnet restore "./src/Yarp.LoadBalancer/Yarp.LoadBalancer.csproj"
 COPY . .
-WORKDIR "/src/src/Account.Api"
-RUN dotnet build "./Account.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/src/Yarp.LoadBalancer"
+RUN dotnet build "./Yarp.LoadBalancer.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Account.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./Yarp.LoadBalancer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Account.Api.dll"]
+ENTRYPOINT ["dotnet", "Yarp.LoadBalancer.dll"]

@@ -12,5 +12,13 @@ namespace Account.Api.Data
         }
 
         public DbSet<Cliente> Clientes { get; set; } = default!;
+        public DbSet<Transacao> Transacoes { get; set; } = default!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AccountApiContext).Assembly);
+        }
     }
 }
