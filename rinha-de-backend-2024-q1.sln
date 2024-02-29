@@ -7,11 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Account.Api", "src\Account.
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{FB5D14B7-4292-4BB5-B8A2-299F718D9F26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yarp.LoadBalancer", "src\Yarp.LoadBalancer\Yarp.LoadBalancer.csproj", "{B0FCC33D-11C7-4D25-A152-698B70B62EA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yarp.LoadBalancer", "src\Yarp.LoadBalancer\Yarp.LoadBalancer.csproj", "{B0FCC33D-11C7-4D25-A152-698B70B62EA4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{58E3E7C5-327D-4A21-B2EC-12F1DAD6D37B}"
 	ProjectSection(SolutionItems) = preProject
-		init-db.sql = init-db.sql
+		script.sql = script.sql
 	EndProjectSection
 EndProject
 Global
