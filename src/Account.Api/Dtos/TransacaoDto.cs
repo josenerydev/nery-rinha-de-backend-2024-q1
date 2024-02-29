@@ -2,7 +2,7 @@
 
 namespace Account.Api.Dtos
 {
-    public class TransacaoDTO
+    public class TransacaoDto
     {
         [JsonPropertyName("valor")]
         public int Valor { get; set; }

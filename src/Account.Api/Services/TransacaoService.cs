@@ -59,7 +59,7 @@ namespace Account.Api.Services
             return (true, cliente);
         }
 
-        public async Task<ExtratoRespostaDTO> ObterExtrato(int clienteId)
+        public async Task<ExtratoRespostaDto> ObterExtrato(int clienteId)
         {
             // Verifica se o cliente existe
             var clienteExists = await _context.Clientes.AnyAsync(c => c.Id == clienteId);
@@ -71,7 +71,7 @@ namespace Account.Api.Services
                                                   .Where(t => t.ClienteId == clienteId)
                                                   .OrderByDescending(t => t.RealizadaEm)
                                                   .Take(10)
-                                                  .Select(t => new TransacaoDTO
+                                                  .Select(t => new TransacaoDto
                                                   {
                                                       Valor = t.Valor,
                                                       Tipo = (char)t.Tipo,
@@ -85,9 +85,9 @@ namespace Account.Api.Services
                                         .Select(c => new { c.Id, c.Saldo, c.Limite })
                                         .FirstOrDefaultAsync(c => c.Id == clienteId);
 
-            var extratoRespostaDTO = new ExtratoRespostaDTO
+            var extratoRespostaDTO = new ExtratoRespostaDto
             {
-                Saldo = new SaldoDTO
+                Saldo = new SaldoDto
                 {
                     Total = cliente!.Saldo,
                     DataExtrato = DateTime.UtcNow,

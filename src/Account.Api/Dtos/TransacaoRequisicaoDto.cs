@@ -1,6 +1,6 @@
 ﻿namespace Account.Api.Dtos
 {
-    public class TransacaoRequisicaoDTO
+    public class TransacaoRequisicaoDto
     {
         public int Valor { get; set; }
         public char Tipo { get; set; }

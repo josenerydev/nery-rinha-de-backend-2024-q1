@@ -2,17 +2,17 @@
 
 namespace Account.Api.Dtos
 {
-    public class ExtratoRespostaDTO
+    public class ExtratoRespostaDto
     {
         [JsonPropertyName("saldo")]
-        public SaldoDTO Saldo { get; set; }
+        public SaldoDto Saldo { get; set; }
 
         [JsonPropertyName("ultimas_transacoes")]
-        public List<TransacaoDTO> UltimasTransacoes { get; set; }
+        public List<TransacaoDto> UltimasTransacoes { get; set; }
 
-        public ExtratoRespostaDTO()
+        public ExtratoRespostaDto()
         {
-            UltimasTransacoes = new List<TransacaoDTO>();
+            UltimasTransacoes = new List<TransacaoDto>();
         }
     }
 }

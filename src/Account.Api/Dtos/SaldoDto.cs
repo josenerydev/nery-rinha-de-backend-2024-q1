@@ -2,7 +2,7 @@
 
 namespace Account.Api.Dtos
 {
-    public class SaldoDTO
+    public class SaldoDto
     {
         [JsonPropertyName("total")]
         public int Total { get; set; }

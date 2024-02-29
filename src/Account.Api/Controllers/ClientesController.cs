@@ -17,7 +17,7 @@ namespace Account.Api.Controllers
         }
 
         [HttpPost("{id}/transacoes")]
-        public async Task<IActionResult> PostTransacao(int id, TransacaoRequisicaoDTO transacaoRequisicaoDTO)
+        public async Task<IActionResult> PostTransacao(int id, TransacaoRequisicaoDto transacaoRequisicaoDTO)
         {
             (bool sucesso, var cliente) = transacaoRequisicaoDTO.Tipo == 'c' ?
                 await _transacaoService.RealizarDeposito(id, transacaoRequisicaoDTO.Valor, transacaoRequisicaoDTO.Descricao) :
@@ -29,7 +29,7 @@ namespace Account.Api.Controllers
                 return UnprocessableEntity("Não foi possível realizar a transação.");
             }
 
-            return Ok(new TransacaoRespostaDTO { Limite = cliente.Limite, Saldo = cliente.Saldo });
+            return Ok(new TransacaoRespostaDto { Limite = cliente.Limite, Saldo = cliente.Saldo });
         }
 
         [HttpGet("{id}/extrato")]
