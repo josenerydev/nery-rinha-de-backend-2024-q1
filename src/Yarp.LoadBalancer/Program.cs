@@ -1,3 +1,5 @@
+using Yarp.LoadBalancer;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
@@ -15,6 +17,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ConcurrencyControlMiddleware>();
 
 app.MapReverseProxy();
 

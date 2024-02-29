@@ -19,14 +19,14 @@ namespace Account.Api.Controllers
         [HttpPost("{id}/transacoes")]
         public async Task<IActionResult> PostTransacao(int id, TransacaoRequisicaoDto transacaoRequisicaoDTO)
         {
-            (bool sucesso, var cliente) = transacaoRequisicaoDTO.Tipo == 'c' ?
+            (bool sucesso, var cliente, string erro) = transacaoRequisicaoDTO.Tipo == 'c' ?
                 await _transacaoService.RealizarDeposito(id, transacaoRequisicaoDTO.Valor, transacaoRequisicaoDTO.Descricao) :
                 await _transacaoService.RealizarSaque(id, transacaoRequisicaoDTO.Valor, transacaoRequisicaoDTO.Descricao);
 
             if (!sucesso)
             {
                 if (cliente == null) return NotFound("Cliente não encontrado.");
-                return UnprocessableEntity("Não foi possível realizar a transação.");
+                return UnprocessableEntity(erro);
             }
 
             return Ok(new TransacaoRespostaDto { Limite = cliente.Limite, Saldo = cliente.Saldo });

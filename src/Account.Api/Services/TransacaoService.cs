@@ -15,10 +15,13 @@ namespace Account.Api.Services
             _context = context;
         }
 
-        public async Task<(bool, Cliente)> RealizarDeposito(int clienteId, int valor, string descricao)
+        public async Task<(bool, Cliente, string)> RealizarDeposito(int clienteId, int valor, string descricao)
         {
-            var cliente = await _context.Clientes.Include(c => c.Transacoes).FirstOrDefaultAsync(c => c.Id == clienteId);
-            if (cliente == null) return (false, null!);
+            if (valor <= 0) return (false, null, "Valor deve ser positivo e inteiro.");
+            if (string.IsNullOrWhiteSpace(descricao) || descricao.Length > 10) return (false, null, "Descrição inválida.");
+
+            var cliente = await _context.Clientes.FindAsync(clienteId);
+            if (cliente == null) return (false, null, "Cliente não encontrado.");
 
             cliente.Saldo += valor;
             cliente.Transacoes.Add(new Transacao
@@ -30,18 +33,19 @@ namespace Account.Api.Services
                 ClienteId = clienteId
             });
 
-            _context.Clientes.Update(cliente);
             await _context.SaveChangesAsync();
-
-            return (true, cliente);
+            return (true, cliente, string.Empty);
         }
 
-        public async Task<(bool, Cliente)> RealizarSaque(int clienteId, int valor, string descricao)
+        public async Task<(bool, Cliente, string)> RealizarSaque(int clienteId, int valor, string descricao)
         {
-            var cliente = await _context.Clientes.Include(c => c.Transacoes).FirstOrDefaultAsync(c => c.Id == clienteId);
-            if (cliente == null) return (false, null!);
+            if (valor <= 0) return (false, null, "Valor deve ser positivo e inteiro.");
+            if (string.IsNullOrWhiteSpace(descricao) || descricao.Length > 10) return (false, null, "Descrição inválida.");
 
-            if (cliente.Saldo - valor < -cliente.Limite) return (false, cliente);
+            var cliente = await _context.Clientes.FindAsync(clienteId);
+            if (cliente == null) return (false, null, "Cliente não encontrado.");
+
+            if (cliente.Saldo - valor < -cliente.Limite) return (false, cliente, "Transação excede o limite do cliente.");
 
             cliente.Saldo -= valor;
             cliente.Transacoes.Add(new Transacao
@@ -53,10 +57,8 @@ namespace Account.Api.Services
                 ClienteId = clienteId
             });
 
-            _context.Clientes.Update(cliente);
             await _context.SaveChangesAsync();
-
-            return (true, cliente);
+            return (true, cliente, string.Empty);
         }
 
         public async Task<ExtratoRespostaDto> ObterExtrato(int clienteId)
