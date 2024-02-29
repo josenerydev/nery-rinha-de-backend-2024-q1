@@ -9,9 +9,13 @@ services:
       dockerfile: src/Account.Api/Dockerfile
     depends_on:
       - db
-      - yarp.loadbalancer
     environment:
       - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;
+    deploy:
+      resources:
+        limits:
+          cpus: '0.4'
+          memory: 150M
 
   account.api2:
     container_name: account_api_2
@@ -21,9 +25,28 @@ services:
         dockerfile: src/Account.Api/Dockerfile
     depends_on:
         - db
-        - yarp.loadbalancer
     environment:
         - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;
+    deploy:
+      resources:
+        limits:
+          cpus: '0.4'
+          memory: 150M
+
+  yarp.loadbalancer:
+    container_name: yarp_loadbalancer
+    image: ${DOCKER_REGISTRY-}yarploadbalancer
+    build:
+      context: .
+      dockerfile: src/Yarp.LoadBalancer/Dockerfile
+    depends_on:
+        - account.api1
+        - account.api2
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 50M
 
   db:
     container_name: postgres_db
@@ -36,10 +59,8 @@ services:
       - "5432:5432"
     volumes:
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-
-  yarp.loadbalancer:
-    container_name: yarp_loadbalancer
-    image: ${DOCKER_REGISTRY-}yarploadbalancer
-    build:
-      context: .
-      dockerfile: src/Yarp.LoadBalancer/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 200M
