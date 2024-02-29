@@ -10,23 +10,41 @@ namespace Account.Api.Controllers
     public class ClientesController : ControllerBase
     {
         private readonly ITransacaoService _transacaoService;
+        private readonly ITransacaoValidacaoService _transacaoValidacaoService;
 
-        public ClientesController(ITransacaoService transacaoService)
+        public ClientesController(ITransacaoService transacaoService, ITransacaoValidacaoService transacaoValidacaoService)
         {
             _transacaoService = transacaoService;
+            _transacaoValidacaoService = transacaoValidacaoService;
         }
 
         [HttpPost("{id}/transacoes")]
         public async Task<IActionResult> PostTransacao(int id, TransacaoRequisicaoDto transacaoRequisicaoDTO)
         {
-            (bool sucesso, var cliente, string erro) = transacaoRequisicaoDTO.Tipo == 'c' ?
-                await _transacaoService.RealizarDeposito(id, transacaoRequisicaoDTO.Valor, transacaoRequisicaoDTO.Descricao) :
-                await _transacaoService.RealizarSaque(id, transacaoRequisicaoDTO.Valor, transacaoRequisicaoDTO.Descricao);
+            var tipoValido = _transacaoValidacaoService.ValidarTipo(transacaoRequisicaoDTO.Tipo);
+            if (!tipoValido.IsValid)
+                return UnprocessableEntity(tipoValido.ErrorMessage);
+
+            var valorValido = _transacaoValidacaoService.ValidarValor(transacaoRequisicaoDTO.Valor);
+            if (!valorValido.IsValid)
+                return UnprocessableEntity(valorValido.ErrorMessage);
+
+            var descricaoValida = _transacaoValidacaoService.ValidarDescricao(transacaoRequisicaoDTO.Descricao);
+            if (!descricaoValida.IsValid)
+                return UnprocessableEntity(descricaoValida.ErrorMessage);
+
+            (bool sucesso, var cliente, string erro) = await _transacaoService.RealizarTransacao(id, transacaoRequisicaoDTO.Valor, transacaoRequisicaoDTO.Tipo, transacaoRequisicaoDTO.Descricao);
 
             if (!sucesso)
             {
-                if (cliente == null) return NotFound("Cliente não encontrado.");
-                return UnprocessableEntity(erro);
+                if (cliente == null)
+                {
+                    return NotFound("Cliente não encontrado.");
+                }
+                else if (erro == "Saldo insuficiente.")
+                {
+                    return UnprocessableEntity("Transação excede o limite do cliente.");
+                }
             }
 
             return Ok(new TransacaoRespostaDto { Limite = cliente.Limite, Saldo = cliente.Saldo });

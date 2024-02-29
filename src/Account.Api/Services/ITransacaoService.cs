@@ -5,10 +5,8 @@ namespace Account.Api.Services
 {
     public interface ITransacaoService
     {
+        Task<(bool, Cliente?, string)> RealizarTransacao(int clienteId, int valor, char tipo, string descricao);
+
         Task<ExtratoRespostaDto> ObterExtrato(int clienteId);
-
-        Task<(bool, Cliente, string)> RealizarDeposito(int clienteId, int valor, string descricao);
-
-        Task<(bool, Cliente, string)> RealizarSaque(int clienteId, int valor, string descricao);
     }
 }
