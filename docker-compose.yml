@@ -11,11 +11,13 @@ services:
       - db
     environment:
       - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;
+    networks:
+      - nginx
     deploy:
       resources:
         limits:
-          cpus: '0.4'
-          memory: 150M
+          cpus: "0.5"
+          memory: "100MB"
 
   account.api2:
     container_name: account_api_2
@@ -27,26 +29,31 @@ services:
         - db
     environment:
         - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;
+    networks:
+      - nginx
     deploy:
       resources:
         limits:
-          cpus: '0.4'
-          memory: 150M
+          cpus: "0.5"
+          memory: "100MB"
 
-  yarp.loadbalancer:
-    container_name: yarp_loadbalancer
-    image: ${DOCKER_REGISTRY-}yarploadbalancer
-    build:
-      context: .
-      dockerfile: src/Yarp.LoadBalancer/Dockerfile
+  nginx:
+    container_name: load_balancing
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-        - account.api1
-        - account.api2
+      - account.api1
+      - account.api2
+    ports:
+      - "9999:9999"
+    networks:
+      - nginx
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 50M
+          cpus: "0.2"
+          memory: "20MB"
 
   db:
     container_name: postgres_db
@@ -59,8 +66,14 @@ services:
       - "5432:5432"
     volumes:
       - ./script.sql:/docker-entrypoint-initdb.d/script.sql
+    networks:
+      - nginx
     deploy:
       resources:
         limits:
-          cpus: '0.2'
-          memory: 200M
+          cpus: "0.3"
+          memory: "330MB"
+        
+networks:
+  nginx:
+    driver: bridge

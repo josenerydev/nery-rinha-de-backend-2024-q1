@@ -1,6 +1,0 @@
-@Yarp.LoadBalancer_HostAddress = http://localhost:5271
-
-GET {{Yarp.LoadBalancer_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
