@@ -9,9 +9,9 @@ namespace Account.Api.Controllers
     [ApiController]
     public class ClientesController : ControllerBase
     {
-        private readonly TransacaoService _transacaoService;
+        private readonly ITransacaoService _transacaoService;
 
-        public ClientesController(TransacaoService transacaoService)
+        public ClientesController(ITransacaoService transacaoService)
         {
             _transacaoService = transacaoService;
         }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Account.Api.Services
 {
-    public class TransacaoService
+    public class TransacaoService : ITransacaoService
     {
         private readonly AccountApiContext _context;
 

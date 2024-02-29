@@ -10,7 +10,7 @@ services:
     depends_on:
       - db
     environment:
-      - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;
+      - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;Pooling=true;MinPoolSize=1;MaxPoolSize=100;ConnectionIdleLifetime=300;
     networks:
       - nginx
     deploy:
@@ -28,7 +28,7 @@ services:
     depends_on:
         - db
     environment:
-        - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;
+        - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;Pooling=true;MinPoolSize=1;MaxPoolSize=100;ConnectionIdleLifetime=300;
     networks:
       - nginx
     deploy:
@@ -66,6 +66,20 @@ services:
       - "5432:5432"
     volumes:
       - ./script.sql:/docker-entrypoint-initdb.d/script.sql
+    command: >
+      postgres
+      -c checkpoint_timeout=300
+      -c max_wal_size=1GB
+      -c max_connections=100
+      -c shared_buffers=64MB
+      -c synchronous_commit=on
+      -c fsync=on
+      -c full_page_writes=on
+      -c work_mem=16MB
+      -c maintenance_work_mem=64MB
+      -c effective_cache_size=256MB
+      -c wal_buffers=16MB
+      -c checkpoint_completion_target=0.9
     networks:
       - nginx
     deploy:

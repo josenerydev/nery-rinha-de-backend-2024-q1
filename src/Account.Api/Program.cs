@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AccountApiContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("AccountApiContext") ?? throw new InvalidOperationException("Connection string 'AccountApiContext' not found.")));
 
-builder.Services.AddScoped<TransacaoService>();
+builder.Services.AddScoped<ITransacaoService, TransacaoService>();
 
 builder.Services.AddControllers();
 
