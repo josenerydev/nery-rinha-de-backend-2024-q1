@@ -9,15 +9,17 @@ services:
       dockerfile: src/Account.Api/Dockerfile
     depends_on:
       - db
+      - redis
     environment:
       - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;Pooling=true;MinPoolSize=1;MaxPoolSize=100;ConnectionIdleLifetime=300;
+      - REDIS_HOST=redis
     networks:
       - nginx
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: "100MB"
+          cpus: "0.4"
+          memory: "90MB"
 
   account.api2:
     container_name: account_api_2
@@ -27,15 +29,28 @@ services:
         dockerfile: src/Account.Api/Dockerfile
     depends_on:
         - db
+        - redis
     environment:
         - ConnectionStrings__AccountApiContext=Host=db;Port=5432;Database=AccountApiContext;Username=postgres;Password=mysecretpassword;Pooling=true;MinPoolSize=1;MaxPoolSize=100;ConnectionIdleLifetime=300;
+        - REDIS_HOST=redis
     networks:
       - nginx
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: "100MB"
+          cpus: "0.4"
+          memory: "90MB"
+
+  redis:
+    container_name: redis
+    image: redis
+    networks:
+      - nginx
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "50MB"
 
   nginx:
     container_name: load_balancing
@@ -86,7 +101,7 @@ services:
       resources:
         limits:
           cpus: "0.3"
-          memory: "330MB"
+          memory: "300MB"
         
 networks:
   nginx:
