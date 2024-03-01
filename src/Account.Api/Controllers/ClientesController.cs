@@ -30,8 +30,8 @@ namespace Account.Api.Controllers
             await using var _lock = await _lockFactory.CreateLockAsync(
                 chaveBloqueio,
                 TimeSpan.FromSeconds(10),
-                TimeSpan.FromSeconds(3),
-                TimeSpan.FromSeconds(1)
+                TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(0.5)
             );
 
             if (_lock.IsAcquired)
