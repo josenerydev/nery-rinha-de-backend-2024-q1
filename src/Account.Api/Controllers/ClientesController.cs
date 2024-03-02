@@ -28,7 +28,7 @@ namespace Account.Api.Controllers
         [HttpPost("{id}/transacoes")]
         public async Task<IActionResult> PostTransacao(int id, TransacaoRequisicaoDto transacaoRequisicaoDTO)
         {
-            string chaveBloqueio = $"transacao:{id}";
+            string chaveBloqueio = $"cliente:{id}";
 
             await using var _lock = await _lockFactory.CreateLockAsync(
                 chaveBloqueio,
@@ -74,11 +74,24 @@ namespace Account.Api.Controllers
         [HttpGet("{id}/extrato")]
         public async Task<IActionResult> GetExtrato(int id)
         {
-            var extrato = await _transacaoService.ObterExtrato(id);
+            string chaveBloqueio = $"cliente:{id}";
 
-            if (extrato == null) return NotFound("Cliente não encontrado.");
+            await using var _lock = await _lockFactory.CreateLockAsync(
+                chaveBloqueio,
+                TimeSpan.FromSeconds(_distributedLockFactoryOptions.ExpiryTime),
+                TimeSpan.FromSeconds(_distributedLockFactoryOptions.WaitTime),
+                TimeSpan.FromSeconds(_distributedLockFactoryOptions.RetryTime)
+            );
 
-            return Ok(extrato);
+            if (_lock.IsAcquired)
+            {
+                var extrato = await _transacaoService.ObterExtrato(id);
+
+                if (extrato == null) return NotFound("Cliente não encontrado.");
+
+                return Ok(extrato);
+            }
+            return StatusCode(StatusCodes.Status423Locked, "O recurso está temporariamente bloqueado por outra operação.");
         }
     }
 }
