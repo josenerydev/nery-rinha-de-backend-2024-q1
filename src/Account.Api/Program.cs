@@ -1,4 +1,5 @@
-﻿using Account.Api.Data;
+﻿using Account.Api;
+using Account.Api.Data;
 using Account.Api.Services;
 
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,10 @@ builder.Services.AddDbContext<AccountApiContext>(options =>
 
 builder.Services.AddScoped<ITransacaoService, TransacaoService>();
 builder.Services.AddScoped<ITransacaoValidacaoService, TransacaoValidacaoService>();
+
+builder.Services.Configure<DistributedLockFactoryOptions>(
+    builder.Configuration.GetSection(
+        key: nameof(DistributedLockFactoryOptions)));
 
 var configurationOptions = ConfigurationOptions.Parse(builder.Configuration["REDIS_HOST"]!);
 

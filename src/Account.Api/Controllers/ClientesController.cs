@@ -2,6 +2,7 @@
 using Account.Api.Services;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 using RedLockNet;
 
@@ -13,12 +14,14 @@ namespace Account.Api.Controllers
     {
         private readonly ITransacaoService _transacaoService;
         private readonly ITransacaoValidacaoService _transacaoValidacaoService;
+        private readonly DistributedLockFactoryOptions _distributedLockFactoryOptions;
         private readonly IDistributedLockFactory _lockFactory;
 
-        public ClientesController(ITransacaoService transacaoService, ITransacaoValidacaoService transacaoValidacaoService, IDistributedLockFactory lockFactory)
+        public ClientesController(ITransacaoService transacaoService, ITransacaoValidacaoService transacaoValidacaoService, IDistributedLockFactory lockFactory, IOptions<DistributedLockFactoryOptions> distributedLockFactoryOptions)
         {
             _transacaoService = transacaoService;
             _transacaoValidacaoService = transacaoValidacaoService;
+            _distributedLockFactoryOptions = distributedLockFactoryOptions.Value;
             _lockFactory = lockFactory;
         }
 
@@ -29,9 +32,9 @@ namespace Account.Api.Controllers
 
             await using var _lock = await _lockFactory.CreateLockAsync(
                 chaveBloqueio,
-                TimeSpan.FromSeconds(10),
-                TimeSpan.FromSeconds(10),
-                TimeSpan.FromSeconds(0.5)
+                TimeSpan.FromSeconds(_distributedLockFactoryOptions.ExpiryTime),
+                TimeSpan.FromSeconds(_distributedLockFactoryOptions.WaitTime),
+                TimeSpan.FromSeconds(_distributedLockFactoryOptions.RetryTime)
             );
 
             if (_lock.IsAcquired)
