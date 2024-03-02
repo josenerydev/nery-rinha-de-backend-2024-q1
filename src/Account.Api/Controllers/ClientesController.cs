@@ -28,70 +28,59 @@ namespace Account.Api.Controllers
         [HttpPost("{id}/transacoes")]
         public async Task<IActionResult> PostTransacao(int id, TransacaoRequisicaoDto transacaoRequisicaoDTO)
         {
-            string chaveBloqueio = $"cliente:{id}";
+            string chaveBloqueio = $"c:{id}:{transacaoRequisicaoDTO.Tipo}";
+            //string chaveBloqueio = $"c:{id}";
 
-            await using var _lock = await _lockFactory.CreateLockAsync(
+            var tipoValido = _transacaoValidacaoService.ValidarTipo(transacaoRequisicaoDTO.Tipo);
+            if (!tipoValido.IsValid)
+                return UnprocessableEntity(tipoValido.ErrorMessage);
+
+            var valorValido = _transacaoValidacaoService.ValidarValor(transacaoRequisicaoDTO.Valor);
+            if (!valorValido.IsValid)
+                return UnprocessableEntity(valorValido.ErrorMessage);
+
+            var descricaoValida = _transacaoValidacaoService.ValidarDescricao(transacaoRequisicaoDTO.Descricao);
+            if (!descricaoValida.IsValid)
+                return UnprocessableEntity(descricaoValida.ErrorMessage);
+
+            await using (var _lock = await _lockFactory.CreateLockAsync(
                 chaveBloqueio,
                 TimeSpan.FromSeconds(_distributedLockFactoryOptions.ExpiryTime),
                 TimeSpan.FromSeconds(_distributedLockFactoryOptions.WaitTime),
                 TimeSpan.FromSeconds(_distributedLockFactoryOptions.RetryTime)
-            );
-
-            if (_lock.IsAcquired)
+            ))
             {
-                var tipoValido = _transacaoValidacaoService.ValidarTipo(transacaoRequisicaoDTO.Tipo);
-                if (!tipoValido.IsValid)
-                    return UnprocessableEntity(tipoValido.ErrorMessage);
-
-                var valorValido = _transacaoValidacaoService.ValidarValor(transacaoRequisicaoDTO.Valor);
-                if (!valorValido.IsValid)
-                    return UnprocessableEntity(valorValido.ErrorMessage);
-
-                var descricaoValida = _transacaoValidacaoService.ValidarDescricao(transacaoRequisicaoDTO.Descricao);
-                if (!descricaoValida.IsValid)
-                    return UnprocessableEntity(descricaoValida.ErrorMessage);
-
-                (bool sucesso, var cliente, string erro) = await _transacaoService.RealizarTransacao(id, transacaoRequisicaoDTO.Valor, transacaoRequisicaoDTO.Tipo, transacaoRequisicaoDTO.Descricao);
-
-                if (!sucesso)
+                if (_lock.IsAcquired)
                 {
-                    if (cliente == null)
+                    (bool sucesso, var cliente, string erro) = await _transacaoService.RealizarTransacao(id, transacaoRequisicaoDTO.Valor, transacaoRequisicaoDTO.Tipo, transacaoRequisicaoDTO.Descricao);
+
+                    if (!sucesso)
                     {
-                        return NotFound("Cliente não encontrado.");
+                        if (cliente == null)
+                        {
+                            return NotFound("Cliente não encontrado.");
+                        }
+                        else if (erro == "Saldo insuficiente.")
+                        {
+                            return UnprocessableEntity("Transação excede o limite do cliente.");
+                        }
                     }
-                    else if (erro == "Saldo insuficiente.")
-                    {
-                        return UnprocessableEntity("Transação excede o limite do cliente.");
-                    }
+
+                    return Ok(new TransacaoRespostaDto { Limite = cliente.Limite, Saldo = cliente.Saldo });
                 }
 
-                return Ok(new TransacaoRespostaDto { Limite = cliente.Limite, Saldo = cliente.Saldo });
+                return StatusCode(StatusCodes.Status423Locked, "O recurso está temporariamente bloqueado por outra operação.");
             }
-
-            return StatusCode(StatusCodes.Status423Locked, "O recurso está temporariamente bloqueado por outra operação.");
         }
 
         [HttpGet("{id}/extrato")]
         public async Task<IActionResult> GetExtrato(int id)
         {
-            string chaveBloqueio = $"cliente:{id}";
+            var extrato = await _transacaoService.ObterExtrato(id);
 
-            await using var _lock = await _lockFactory.CreateLockAsync(
-                chaveBloqueio,
-                TimeSpan.FromSeconds(_distributedLockFactoryOptions.ExpiryTime),
-                TimeSpan.FromSeconds(_distributedLockFactoryOptions.WaitTime),
-                TimeSpan.FromSeconds(_distributedLockFactoryOptions.RetryTime)
-            );
+            if (extrato == null) return NotFound("Cliente não encontrado.");
 
-            if (_lock.IsAcquired)
-            {
-                var extrato = await _transacaoService.ObterExtrato(id);
-
-                if (extrato == null) return NotFound("Cliente não encontrado.");
-
-                return Ok(extrato);
-            }
-            return StatusCode(StatusCodes.Status423Locked, "O recurso está temporariamente bloqueado por outra operação.");
+            return Ok(extrato);
         }
     }
 }
