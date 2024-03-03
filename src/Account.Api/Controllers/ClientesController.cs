@@ -28,8 +28,8 @@ namespace Account.Api.Controllers
         [HttpPost("{id}/transacoes")]
         public async Task<IActionResult> PostTransacao(int id, TransacaoRequisicaoDto transacaoRequisicaoDTO)
         {
-            string chaveBloqueio = $"c:{id}:{transacaoRequisicaoDTO.Tipo}";
-            //string chaveBloqueio = $"c:{id}";
+            //string chaveBloqueio = $"c:{id}:{transacaoRequisicaoDTO.Tipo}";
+            string chaveBloqueio = $"c:{id}";
 
             var tipoValido = _transacaoValidacaoService.ValidarTipo(transacaoRequisicaoDTO.Tipo);
             if (!tipoValido.IsValid)
